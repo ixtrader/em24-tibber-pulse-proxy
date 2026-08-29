@@ -1,0 +1,54 @@
+name: Bug report
+description: Report a reproducible problem with the proxy
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include passwords, public IP addresses, or the complete contents of `.env`.
+
+  - type: input
+    id: version
+    attributes:
+      label: Proxy version
+      description: Short Git hash shown in the startup log.
+    validations:
+      required: true
+
+  - type: input
+    id: venus
+    attributes:
+      label: Victron / Venus OS version
+      placeholder: Venus OS v3.xx
+    validations:
+      required: true
+
+  - type: input
+    id: tibber
+    attributes:
+      label: Tibber Bridge and Pulse firmware
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the expected and actual behaviour.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste relevant output from `./compose.sh logs`.
+      render: text
+
+  - type: textarea
+    id: registers
+    attributes:
+      label: EM24 register dump
+      description: Paste relevant output from `tools/em24_dump.py`.
+      render: text

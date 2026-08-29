@@ -203,6 +203,11 @@ MIT — see [LICENSE](LICENSE). Copyright (c) 2026 ixtrader.
 The EM24 register layout is based on the publicly documented Modbus map of the Carlo Gavazzi EM24
 and on experience gained from [`nmakel/solaredge_meterproxy`](https://github.com/nmakel/solaredge_meterproxy).
 
+### Contributing and security
+
+Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Please report security issues
+privately as described in [SECURITY.md](SECURITY.md).
+
 ### Disclaimer
 
 This is a private hobby project and is neither affiliated with nor endorsed by Tibber, Victron
@@ -417,6 +422,11 @@ MIT — siehe [LICENSE](LICENSE). Copyright (c) 2026 ixtrader.
 Das EM24-Registerlayout beruht auf der öffentlich dokumentierten Modbus-Beschreibung des Carlo
 Gavazzi EM24 sowie auf Erfahrungen aus
 [`nmakel/solaredge_meterproxy`](https://github.com/nmakel/solaredge_meterproxy).
+
+### Mitwirken und Sicherheit
+
+Beiträge sind willkommen; Details stehen in [CONTRIBUTING.md](CONTRIBUTING.md). Sicherheitslücken
+bitte ausschließlich privat gemäß [SECURITY.md](SECURITY.md) melden.
 
 ### Haftungsausschluss
 
