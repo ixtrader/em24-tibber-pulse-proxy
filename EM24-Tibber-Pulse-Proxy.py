@@ -175,7 +175,7 @@ def write_text(context, address, value):
 
 def write_static_registers(context, meter_id):
     write_i16(context, 11, 1648)
-    write_i32(context, 768, meter_id)
+    write_i32(context, 768, 0)
     write_i16(context, 770, 4126)
     write_i16(context, 771, 68)
     write_i16(context, 772, 4127)
@@ -215,6 +215,7 @@ def write_measurements(context, power_w, import_wh, export_wh):
         52: import_centikwh, 54: 0, 56: 0, 58: 0, 60: import_centikwh, 62: 0,
         64: import_centikwh / 3, 66: import_centikwh / 3, 68: import_centikwh / 3,
         70: 0, 72: 0, 74: 0, 76: 0, 78: export_centikwh, 80: 0,
+        82: 2400, 84: 11, 86: 22, 88: 33, 90: 44, 92: 118, 94: 120, 96: 122,
     }
     for address, value in values_i32.items():
         write_i32(context, address, value)
@@ -225,10 +226,10 @@ def write_measurements(context, power_w, import_wh, export_wh):
     write_i16(context, 51, FREQUENCY_HZ * 10, unsigned=True)
 
     phase_values = {
-        254: VOLTAGE_LN * 10, 256: VOLTAGE_LL * 10, 258: power_w * 10,
-        260: abs(power_w) * 10, 262: 0, 264: 1000, 266: 0, 268: FREQUENCY_HZ * 10,
-        270: import_centikwh, 272: 0, 274: export_centikwh, 276: 0, 278: 0, 280: 0,
-        282: 0, 284: 0,
+        254: 2400, 256: 256, 258: VOLTAGE_LN * 10, 260: VOLTAGE_LL * 10,
+        262: power_w * 10, 264: abs(power_w) * 10, 266: 0, 268: 1000,
+        270: 0, 272: FREQUENCY_HZ * 10, 274: import_centikwh, 276: 0,
+        278: export_centikwh, 280: 0, 282: 0, 284: 0,
     }
     for phase in range(3):
         base = 286 + phase * 14
@@ -237,6 +238,16 @@ def write_measurements(context, power_w, import_wh, export_wh):
             base + 4: phase_current_ma, base + 6: phase_power * 10,
             base + 8: abs(phase_power) * 10, base + 10: 0, base + 12: 1000,
         })
+    phase_values.update({
+        328: 0, 330: import_centikwh, 332: 0,
+        334: import_centikwh / 3, 336: import_centikwh / 3, 338: import_centikwh / 3,
+        340: 10, 342: 20, 344: 30, 346: 40,
+        348: 346, 350: 348, 352: 350, 354: 352,
+        356: 11, 358: 22, 360: 33, 362: 44,
+        364: 262, 366: 264, 368: 266, 370: 268,
+        372: 270, 374: 272, 376: 274, 378: 276,
+        380: 118, 382: 120, 384: 122,
+    })
     for address, value in phase_values.items():
         write_i32(context, address, value)
 
@@ -271,6 +282,14 @@ def main():
         hr=ModbusSequentialDataBlock(0, [0] * 65536),
         ir=ModbusSequentialDataBlock(0, [0] * 65536),
     )
+    write_static_registers(context, meter_id)
+    try:
+        power_w, import_wh, export_wh = read_meter_values()
+        write_measurements(context, power_w, import_wh, export_wh)
+        logging.info("Erste Tibber-Werte vor Serverstart geladen.")
+    except Exception as error:
+        write_measurements(context, Decimal(0), Decimal(0), Decimal(0))
+        logging.warning("Erster Tibber-Abruf fehlgeschlagen: %s", error)
     stop_event = threading.Event()
     thread = threading.Thread(target=update_loop, args=(context, meter_id, stop_event), daemon=True)
     thread.start()
