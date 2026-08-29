@@ -30,6 +30,17 @@ class SmlParseError(ValueError):
     pass
 
 
+class Em24SlaveContext(ModbusSlaveContext):
+    def getValues(self, function_code, address, count=1):
+        logging.getLogger(__name__).info(
+            "Modbus-Leseanfrage: Funktion %s, Register %s, Anzahl %s",
+            function_code,
+            address,
+            count,
+        )
+        return super().getValues(function_code, address, count)
+
+
 def setting(name, default=""):
     return os.getenv(name, default).strip()
 
@@ -171,7 +182,7 @@ def write_static_registers(context, meter_id):
     write_i16(context, 773, 67)
     write_i16(context, 774, 0)
     write_i16(context, 848, 4128)
-    write_text(context, 20480, "EM24DINAV23XE1X")
+    write_text(context, 20480, "MB24DINAV23XE1X")
     write_i16(context, 4096, 9999)
     write_i16(context, 4097, 0)
     write_i16(context, 4098, 0)
@@ -184,6 +195,7 @@ def write_static_registers(context, meter_id):
     write_i16(context, 4361, 2)
     for address, value in enumerate((1, 3, 1, 3, 3, 1, 2, 3), start=40960):
         write_i16(context, address, value)
+    write_i16(context, 41216, 3)
 
 
 def write_measurements(context, power_w, import_wh, export_wh):
@@ -215,10 +227,11 @@ def write_measurements(context, power_w, import_wh, export_wh):
     phase_values = {
         254: VOLTAGE_LN * 10, 256: VOLTAGE_LL * 10, 258: power_w * 10,
         260: abs(power_w) * 10, 262: 0, 264: 1000, 266: 0, 268: FREQUENCY_HZ * 10,
-        270: import_centikwh, 272: 0, 274: export_centikwh, 276: 0,
+        270: import_centikwh, 272: 0, 274: export_centikwh, 276: 0, 278: 0, 280: 0,
+        282: 0, 284: 0,
     }
     for phase in range(3):
-        base = 284 + phase * 14
+        base = 286 + phase * 14
         phase_values.update({
             base: VOLTAGE_LL * 10, base + 2: VOLTAGE_LN * 10,
             base + 4: phase_current_ma, base + 6: phase_power * 10,
@@ -248,11 +261,13 @@ def main():
         level=setting("TIBBER_BRIDGE_LOGLEVEL", "INFO").upper(),
         format="%(asctime)s %(levelname)s: %(message)s",
     )
+    if logging.getLogger().isEnabledFor(logging.DEBUG):
+        logging.getLogger("pymodbus").setLevel(logging.DEBUG)
     host = setting("EM24_METER_HOST", "0.0.0.0")
     port = int(setting("EM24_METER_PORT", "502"))
     meter_id = int(setting("EM24_METER_ID", "12345678"))
 
-    context = ModbusSlaveContext(
+    context = Em24SlaveContext(
         hr=ModbusSequentialDataBlock(0, [0] * 65536),
         ir=ModbusSequentialDataBlock(0, [0] * 65536),
     )
@@ -264,7 +279,7 @@ def main():
     identity.VendorName = "Carlo Gavazzi"
     identity.ProductCode = "EM24"
     identity.ProductName = "EM24 Tibber Pulse Proxy"
-    identity.ModelName = "EM24DINAV23XE1X"
+    identity.ModelName = "MB24DINAV23XE1X"
     logging.info("EM24-Modbus-TCP-Server auf %s:%s, Unit-ID 1", host, port)
     try:
         StartTcpServer(context=ModbusServerContext(slaves={1: context}, single=False), identity=identity, address=(host, port))
