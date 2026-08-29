@@ -24,6 +24,8 @@ OBIS_POWER = b"\x01\x00\x10\x07\x00\xff"
 VOLTAGE_LN = Decimal("230")
 VOLTAGE_LL = Decimal("400")
 FREQUENCY_HZ = Decimal("50")
+MODEL_REGISTER = 11
+EM24_MODEL_NUMBER = 1648
 
 
 class SmlParseError(ValueError):
@@ -38,6 +40,9 @@ class Em24SlaveContext(ModbusSlaveContext):
             address,
             count,
         )
+        # Register 11 wird vom 32-Bit-Wert auf Adresse 10 ueberschrieben.
+        if address == MODEL_REGISTER and count == 1:
+            return [EM24_MODEL_NUMBER]
         return super().getValues(function_code, address, count)
 
 
@@ -174,7 +179,7 @@ def write_text(context, address, value):
 
 
 def write_static_registers(context, meter_id):
-    write_i16(context, 11, 1648)
+    write_i16(context, MODEL_REGISTER, EM24_MODEL_NUMBER)
     write_i32(context, 768, 0)
     write_i16(context, 770, 4126)
     write_i16(context, 771, 68)
