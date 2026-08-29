@@ -92,16 +92,17 @@ Two consequences to be aware of:
 ### Installation
 
 ```bash
-git clone <your-fork-url> em24-tibber-pulse-proxy
+git clone https://github.com/ixtrader/em24-tibber-pulse-proxy.git
 cd em24-tibber-pulse-proxy
 cp .env.example .env
+chmod +x compose.sh
 ```
 
 Edit `.env` and adjust the values (see table below). Then start it:
 
 ```bash
-docker compose up --build -d
-docker compose logs -f
+./compose.sh up --build -d
+./compose.sh logs -f
 ```
 
 Expected output:
@@ -123,6 +124,7 @@ INFO: Tibber Pulse: P=-1281 W, Bezug=1324095.5 Wh, Einspeisung=5137706.3 Wh
 | `TIBBER_BRIDGE_USER` | HTTP user of the bridge | `admin` |
 | `TIBBER_BRIDGE_PASSWORD` | HTTP password (printed on the bridge) | `XXXX-XXXX` |
 | `TIBBER_BRIDGE_LOGLEVEL` | `info` or `debug` | `info` |
+| `BUILD_VERSION` | build version; `compose.sh` sets the current short Git hash | automatic |
 | `EM24_METER_HOST` | listen address inside the container | `0.0.0.0` |
 | `EM24_METER_PORT` | Modbus TCP port | `502` |
 | `EM24_METER_ID` | meter ID | `12345678` |
@@ -163,17 +165,11 @@ Show the incoming requests of the GX device:
 docker compose logs -f | grep Modbus-Leseanfrage
 ```
 
-Read a few registers manually:
+Dump all implemented EM24 registers with field names:
 
 ```bash
-docker exec -i em24-tibber-pulse-proxy python3 - <<'PY'
-from pymodbus.client import ModbusTcpClient
-c = ModbusTcpClient("127.0.0.1", port=502); c.connect()
-print("model  :", c.read_holding_registers(11, count=1, slave=1).registers)      # 1648
-print("power  :", c.read_holding_registers(40, count=2, slave=1).registers)      # W * 10
-print("ident  :", c.read_holding_registers(20480, count=8, slave=1).registers)
-c.close()
-PY
+docker cp tools/em24_dump.py em24-tibber-pulse-proxy:/tmp/em24_dump.py
+docker exec em24-tibber-pulse-proxy python3 /tmp/em24_dump.py
 ```
 
 ### Troubleshooting
@@ -309,16 +305,17 @@ Zwei Punkte sind dabei zu beachten:
 ### Installation
 
 ```bash
-git clone <deine-fork-url> em24-tibber-pulse-proxy
+git clone https://github.com/ixtrader/em24-tibber-pulse-proxy.git
 cd em24-tibber-pulse-proxy
 cp .env.example .env
+chmod +x compose.sh
 ```
 
 `.env` bearbeiten und die Werte anpassen (siehe Tabelle unten). Danach starten:
 
 ```bash
-docker compose up --build -d
-docker compose logs -f
+./compose.sh up --build -d
+./compose.sh logs -f
 ```
 
 Erwartete Ausgabe:
@@ -340,6 +337,7 @@ INFO: Tibber Pulse: P=-1281 W, Bezug=1324095.5 Wh, Einspeisung=5137706.3 Wh
 | `TIBBER_BRIDGE_USER` | HTTP-Benutzer der Bridge | `admin` |
 | `TIBBER_BRIDGE_PASSWORD` | HTTP-Passwort (auf der Bridge aufgedruckt) | `XXXX-XXXX` |
 | `TIBBER_BRIDGE_LOGLEVEL` | `info` oder `debug` | `info` |
+| `BUILD_VERSION` | Build-Version; `compose.sh` setzt automatisch den kurzen Git-Hash | automatisch |
 | `EM24_METER_HOST` | Lauschadresse im Container | `0.0.0.0` |
 | `EM24_METER_PORT` | Modbus-TCP-Port | `502` |
 | `EM24_METER_ID` | Zähler-ID | `12345678` |
@@ -380,17 +378,11 @@ Eingehende Anfragen des GX-Geräts anzeigen:
 docker compose logs -f | grep Modbus-Leseanfrage
 ```
 
-Register manuell auslesen:
+Alle implementierten EM24-Register mit Feldbezeichnungen auslesen:
 
 ```bash
-docker exec -i em24-tibber-pulse-proxy python3 - <<'PY'
-from pymodbus.client import ModbusTcpClient
-c = ModbusTcpClient("127.0.0.1", port=502); c.connect()
-print("Modell   :", c.read_holding_registers(11, count=1, slave=1).registers)    # 1648
-print("Leistung :", c.read_holding_registers(40, count=2, slave=1).registers)    # W * 10
-print("Kennung  :", c.read_holding_registers(20480, count=8, slave=1).registers)
-c.close()
-PY
+docker cp tools/em24_dump.py em24-tibber-pulse-proxy:/tmp/em24_dump.py
+docker exec em24-tibber-pulse-proxy python3 /tmp/em24_dump.py
 ```
 
 ### Fehlersuche

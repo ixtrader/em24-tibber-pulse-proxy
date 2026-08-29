@@ -4,7 +4,7 @@
 Das Modul liest zyklisch den SML-Frame einer Tibber-Pulse-Bridge
 (``/data.json?node_id=...``), dekodiert daraus die OBIS-Werte fuer Bezug,
 Einspeisung und Momentanleistung und stellt sie unter Unit-ID 1 im
-Registerlayout eines Carlo-Gavazzi-EM24 bereit. Verbraucher wie ein Victron
+Registerlayout eines EM24 bereit. Verbraucher wie ein Victron
 MultiPlus II GX koennen den Dienst dadurch unveraendert als EM24 einbinden.
 
 Der Tibber Pulse misst nur die Summenwirkleistung. Sie wird deshalb gleichmaessig
@@ -52,6 +52,7 @@ FREQUENCY_HZ = Decimal("50")
 # 1648 (0x670) liefert.
 MODEL_REGISTER = 11
 EM24_MODEL_NUMBER = 1648
+BUILD_VERSION = os.getenv("BUILD_VERSION", "dev")
 
 
 class SmlParseError(ValueError):
@@ -425,6 +426,7 @@ def main():
     host = setting("EM24_METER_HOST", "0.0.0.0")
     port = int(setting("EM24_METER_PORT", "502"))
     meter_id = int(setting("EM24_METER_ID", "12345678"))
+    logging.info("EM24 Tibber Pulse Proxy Build %s", BUILD_VERSION)
 
     context = Em24SlaveContext(
         hr=ModbusSequentialDataBlock(0, [0] * 65536),
@@ -446,10 +448,13 @@ def main():
     thread.start()
 
     identity = ModbusDeviceIdentification()
-    identity.VendorName = "Carlo Gavazzi"
+    identity.VendorName = f"em24-tibber-pulse-proxy {BUILD_VERSION}"
     identity.ProductCode = "EM24"
-    identity.ProductName = "EM24 Tibber Pulse Proxy"
+    identity.MajorMinorRevision = BUILD_VERSION
+    identity.VendorUrl = "github.com/ixtrader/em24-tibber-pulse-proxy"
+    identity.ProductName = f"EM24 Tibber Pulse Proxy {BUILD_VERSION}"
     identity.ModelName = "MB24DINAV23XE1X"
+    identity.UserApplicationName = "Tibber Pulse to EM24 Modbus TCP"
     logging.info("EM24-Modbus-TCP-Server auf %s:%s, Unit-ID 1", host, port)
     try:
         StartTcpServer(context=ModbusServerContext(slaves={1: context}, single=False), identity=identity, address=(host, port))

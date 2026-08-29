@@ -1,6 +1,9 @@
 services:
   em24-tibber-pulse-proxy:
-    build: .
+    build:
+      context: .
+      args:
+        BUILD_VERSION: ${BUILD_VERSION:-dev}
     image: em24-tibber-pulse-proxy:latest
     container_name: em24-tibber-pulse-proxy
     hostname: ${EM24_METER_HOSTNAME:-EM24}
