@@ -1,0 +1,28 @@
+services:
+  em24-tibber-pulse-proxy:
+    build: .
+    image: em24-tibber-pulse-proxy:latest
+    container_name: em24-tibber-pulse-proxy
+    hostname: ${EM24_METER_HOSTNAME:-EM24}
+    mac_address: ${EM24_METER_MAC}
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      em24_lan:
+        ipv4_address: ${EM24_METER_IP}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  em24_lan:
+    driver: macvlan
+    driver_opts:
+      parent: ${EM24_NETWORK_PARENT}
+    ipam:
+      config:
+        - subnet: ${EM24_NETWORK_SUBNET}
+          gateway: ${EM24_NETWORK_GATEWAY}
