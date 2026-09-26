@@ -37,13 +37,13 @@ as the grid meter.
 flowchart LR
     M[Utility meter<br/>SML via IR] --> P[Tibber Pulse IR]
     P -->|Zigbee| B[Tibber Bridge]
-    B -->|HTTP /data.json| S[EM24 Tibber Pulse Proxy]
+    B -->|HTTP /node_data.json| S[EM24 Tibber Pulse Proxy]
     S -->|Modbus TCP :502| V[Victron GX / MultiPlus II]
 ```
 
 ### How it works
 
-1. Every second the service requests `http://<bridge>/data.json?node_id=<id>` from the Tibber
+1. Every second the service requests `http://<bridge>/node_data.json?node_id=<id>` from the Tibber
    Bridge. Despite the file name, the response is **not** JSON but a binary **SML** frame
    (Smart Message Language, IEC 62056-5-3).
 2. The SML frame is decoded and the following OBIS values are extracted:
@@ -70,7 +70,7 @@ regulation, which evaluates the total active power.
 
 * A **Tibber Pulse IR** paired with a **Tibber Bridge**, reachable in your local network.
 * The **local HTTP interface** of the bridge must be enabled (web interface and
-  `data.json` endpoint, protected by HTTP basic auth).
+  `node_data.json` endpoint, protected by HTTP basic auth).
 * A **Victron GX device** (Cerbo GX, MultiPlus II GX, Venus OS …) with ESS.
 * A host running **Docker** and **Docker Compose**.
 * A **free IP address** in your LAN for the emulated meter.
@@ -178,7 +178,7 @@ docker exec em24-tibber-pulse-proxy python3 /tmp/em24_dump.py
 |---|---|
 | `Netzzähler nicht gefunden` in Victron | Register `11` must return `1648`. Check with the snippet above. |
 | No `Modbus-Leseanfrage` lines in the log | The GX device never connects. Check IP, port `502` and unit ID `1`. |
-| `Connection refused` on `data.json` | Wrong `TIBBER_BRIDGE_PORT`. The bridge usually listens on `80`. |
+| `Connection refused` on `node_data.json` | Wrong `TIBBER_BRIDGE_PORT`. The bridge usually listens on `80`. |
 | `401 Unauthorized` | Wrong user or password of the bridge. |
 | `Keinen vollstaendigen SML-Frame erhalten` | Wrong `node_id`, or the Pulse is currently not delivering data. |
 | Host cannot ping the container | Expected with macvlan. Test from another device in the LAN. |
@@ -246,13 +246,13 @@ als Netzzähler.
 flowchart LR
     M[Amtlicher Zähler<br/>SML über IR] --> P[Tibber Pulse IR]
     P -->|Zigbee| B[Tibber Bridge]
-    B -->|HTTP /data.json| S[EM24 Tibber Pulse Proxy]
+    B -->|HTTP /node_data.json| S[EM24 Tibber Pulse Proxy]
     S -->|Modbus TCP :502| V[Victron GX / MultiPlus II]
 ```
 
 ### Funktionsweise
 
-1. Der Dienst ruft sekündlich `http://<bridge>/data.json?node_id=<id>` von der Tibber Bridge ab.
+1. Der Dienst ruft sekündlich `http://<bridge>/node_data.json?node_id=<id>` von der Tibber Bridge ab.
    Trotz des Dateinamens liefert die Bridge **kein** JSON, sondern einen binären **SML**-Frame
    (Smart Message Language, IEC 62056-5-3).
 2. Der SML-Frame wird dekodiert und folgende OBIS-Werte werden ausgelesen:
@@ -279,7 +279,7 @@ Summenwirkleistung auswertet, ist das ausreichend.
 
 * Ein **Tibber Pulse IR**, gekoppelt mit einer **Tibber Bridge**, erreichbar im lokalen Netz.
 * Die **lokale HTTP-Schnittstelle** der Bridge muss aktiv sein (Weboberfläche und Endpunkt
-  `data.json`, abgesichert per HTTP-Basic-Authentifizierung).
+  `node_data.json`, abgesichert per HTTP-Basic-Authentifizierung).
 * Ein **Victron-GX-Gerät** (Cerbo GX, MultiPlus II GX, Venus OS …) mit ESS.
 * Ein Host mit **Docker** und **Docker Compose**.
 * Eine **freie IP-Adresse** im LAN für den emulierten Zähler.
@@ -396,7 +396,7 @@ docker exec em24-tibber-pulse-proxy python3 /tmp/em24_dump.py
 |---|---|
 | `Netzzähler nicht gefunden` in Victron | Register `11` muss `1648` liefern. Mit dem Schnipsel oben prüfen. |
 | Keine `Modbus-Leseanfrage` im Log | Das GX-Gerät verbindet sich nicht. IP, Port `502` und Unit-ID `1` prüfen. |
-| `Connection refused` bei `data.json` | Falscher `TIBBER_BRIDGE_PORT`. Die Bridge lauscht meist auf `80`. |
+| `Connection refused` bei `node_data.json` | Falscher `TIBBER_BRIDGE_PORT`. Die Bridge lauscht meist auf `80`. |
 | `401 Unauthorized` | Falscher Benutzer oder falsches Passwort der Bridge. |
 | `Keinen vollstaendigen SML-Frame erhalten` | Falsche `node_id`, oder der Pulse liefert gerade keine Daten. |
 | Host kann den Container nicht anpingen | Bei macvlan normal. Von einem anderen Gerät im LAN testen. |

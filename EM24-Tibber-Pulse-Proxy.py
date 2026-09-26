@@ -2,7 +2,7 @@
 """Carlo-Gavazzi-EM24-Modbus-TCP-Emulation mit Echtzeitwerten eines Tibber Pulse.
 
 Das Modul liest zyklisch den SML-Frame einer Tibber-Pulse-Bridge
-(``/data.json?node_id=...``), dekodiert daraus die OBIS-Werte fuer Bezug,
+(``/node_data.json?node_id=...``), dekodiert daraus die OBIS-Werte fuer Bezug,
 Einspeisung und Momentanleistung und stellt sie unter Unit-ID 1 im
 Registerlayout eines EM24 bereit. Verbraucher wie ein Victron
 MultiPlus II GX koennen den Dienst dadurch unveraendert als EM24 einbinden.
@@ -98,7 +98,7 @@ def setting(name, default=""):
 def tibber_url():
     """Baut die Daten-URL der Tibber-Pulse-Bridge aus den Umgebungsvariablen.
 
-    :return: Vollstaendige URL auf ``data.json`` des konfigurierten Knotens.
+    :return: Vollstaendige URL auf ``node_data.json`` des konfigurierten Knotens.
     :raises ValueError: Wenn Host oder Node-ID fehlen.
     """
     host = setting("TIBBER_BRIDGE_HOST")
@@ -106,14 +106,14 @@ def tibber_url():
     node_id = setting("TIBBER_BRIDGE_NODEID")
     if not host or not node_id:
         raise ValueError("TIBBER_BRIDGE_HOST und TIBBER_BRIDGE_NODEID muessen gesetzt sein.")
-    return f"http://{host}:{port}/data.json?node_id={node_id}"
+    return f"http://{host}:{port}/node_data.json?node_id={node_id}"
 
 
 def fetch_sml():
     """Laedt den binaeren SML-Frame von der Tibber-Pulse-Bridge.
 
     Die Bridge verlangt HTTP-Basic-Authentifizierung und antwortet trotz des
-    Dateinamens ``data.json`` nicht mit JSON, sondern mit Rohdaten.
+    Dateinamens ``node_data.json`` nicht mit JSON, sondern mit Rohdaten.
     :return: Antwortkoerper als Bytefolge.
     """
     request = Request(tibber_url())
